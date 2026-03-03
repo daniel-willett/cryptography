@@ -3,8 +3,8 @@ package main
 import ("fmt")
 
 func padding(data []byte) []byte{
-	//Each []byte is 256 bits as []byte takes values 0-255
-	bitLength := len(data) * 256
+	//Each []byte is 8 bits as []byte takes values 0-255
+	bitLength := len(data) * 8
 }
 
 
