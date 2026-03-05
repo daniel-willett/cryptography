@@ -17,15 +17,11 @@ func padding(data []byte) []byte{
 	lengthPadding := make([]byte, 64/8) //64bit but each "chunk" is 8bits so we need 64/8=8 "chunks"
 	//[0     0     0     0     0     0     0     0]
 	//2^8^7 2^8^6 2^8^5 2^8^4 2^8^3 2^8^2 2^8^1 2^8^0
-	fmt.Println(lengthPaddingValue)
 	for i:=7; i>=0; i--{
 		var temp int = lengthPaddingValue / int(math.Pow(2,float64(8*i)))
-		fmt.Println("Temp is %v", temp)
 		lengthPadding[7-i] = byte(temp)
 		lengthPaddingValue = lengthPaddingValue - (temp*int(math.Pow(2,float64(8*i))))
-		fmt.Println("lengthPaddingValue is %v", lengthPaddingValue)
 	}
-	fmt.Println(lengthPadding)
 	data = append(data, lengthPadding...)
 	return data
 }
