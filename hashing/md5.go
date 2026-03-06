@@ -5,7 +5,7 @@ import ("fmt"; "math")
 func padding(data []byte) []byte{
 	//Each []byte is 8 bits as []byte takes values 0-255
 	bitLength := len(data) * 8
-	var quotient int = bitLength / 512
+	var quotient int = (bitLength + 64) / 512 //We 'reserve' 64 at the end anyway and we need the total of the 0 padding & length padding to bring to a multiple of 512
 	paddingNeeded := ((quotient+1)*512) - bitLength
 	numberOfZeros := paddingNeeded - 64
 	//First "chunk" (8bits) is taken by binary 10000000 which is 128 in decimal
