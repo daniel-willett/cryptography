@@ -35,7 +35,7 @@ func main(){
 	fmt.Println(data)
 	*/
 
-	input := "They are deterministic."
+	input := "They are deterministic"
 	data := []byte(input)
 	data = padding(data)
 	fmt.Println(data)
