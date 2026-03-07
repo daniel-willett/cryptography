@@ -39,4 +39,25 @@ func main(){
 	data := []byte(input)
 	data = padding(data)
 	fmt.Println(data)
+
+	A := 0x01234567
+        B := 0x89abcdef
+        C := 0xfedcba98
+        D := 0x76543210
+
+	rounds := [][]int{
+		{0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15},
+		{1,6,11,0,5,10,15,4,9,14,3,8,13,2,7,12},
+		{5,8,11,14,1,4,7,10,13,0,3,6,9,12,15,2},
+		{0,7,14,5,12,3,10,1,8,15,6,13,4,11,2,9},
+	}
+
+	for i:=0;i<len(data)/64;i++{
+		M:=data[i:i+64]
+		words := make([][]byte,16)
+		for j:=0;j<16;j++{
+			words[j] = M[4*j:4*(j+1)]
+		}
+		fmt.Println(words)
+	}
 }
