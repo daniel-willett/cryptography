@@ -102,10 +102,17 @@ func main(){
 	data := []byte(input)
 	data = padding(data)
 
+	/*
 	var initialA uint32 = 0x01234567
         var initialB uint32 = 0x89abcdef
         var initialC uint32 = 0xfedcba98
         var initialD uint32 = 0x76543210
+	*/
+
+	var initialA uint32 = 0x67452301
+        var initialB uint32 = 0xefcdab89
+        var initialC uint32 = 0x98badcfe
+        var initialD uint32 = 0x10325476
 	
 	var A uint32 = initialA
         var B uint32 = initialB
