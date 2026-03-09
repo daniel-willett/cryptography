@@ -1,6 +1,6 @@
 package main
 
-import ("fmt"; "math")
+import ("fmt"; "math"; "math/bits"; "crypto/md5")
 
 func F(B uint32, C uint32, D uint32) uint32{
 	//(B AND C) OR ((NOT B) AND D)
@@ -61,7 +61,7 @@ func bytesToInt32(word []byte) uint32{
 	return first + second + third + fourth
 }
 
-func operation(A uint32, B uint32, C uint32, D uint32, word []byte, K uint32, round int) uint32{
+func operation(A uint32, B uint32, C uint32, D uint32, word []byte, K uint32, round int, S int) uint32{
 	var functionResult uint32 = 0
 	switch round{
 	case 0:
@@ -73,20 +73,22 @@ func operation(A uint32, B uint32, C uint32, D uint32, word []byte, K uint32, ro
 	case 3:
 		functionResult = I(B,C,D)
 	}
-	functionResult = uint32(A+functionResult) //A+F(B,C,D) mod 2^32
+	functionResult = uint32(A+functionResult) // A+F(B,C,D) mod 2^32
 	converted := bytesToInt32(word)
-	functionResult = uint32(converted+functionResult) //A+F(B,C,D)+M_i mod 2^32
-	functionResult = uint32(K+functionResult) //A+F(B,C,D)+M_i+K_i mod 2^32
+	functionResult = uint32(converted+functionResult) // A+F(B,C,D)+M_i mod 2^32
+	functionResult = uint32(K+functionResult) // A+F(B,C,D)+M_i+K_i mod 2^32
+	functionResult = bits.RotateLeft32(functionResult, S) // <<<S
+	functionResult = uint32(B+functionResult) // ((A+F(B,C,D)+M_i+K_i mod 2^32)<<<3)+B mod 2^32
+	return functionResult
 }
 
 func KFormula(round int,operationNumber int)uint32{
 	var i float64 = float64((16*round)+operationNumber)
-	sineValue := math.Sin(angle)
+	sineValue := math.Sin(i+1)
 	value := math.Abs(sineValue) * math.Pow(2,32)
 	quotient := int(math.Trunc(value))
 	return uint32(quotient)
 }
-
 
 func main(){
 	/*
@@ -99,12 +101,16 @@ func main(){
 	input := "They are deterministic"
 	data := []byte(input)
 	data = padding(data)
-	fmt.Println(data)
 
-	var A uint32 = 0x01234567
-        var B uint32 = 0x89abcdef
-        var C uint32 = 0xfedcba98
-        var D uint32 = 0x76543210
+	var initialA uint32 = 0x01234567
+        var initialB uint32 = 0x89abcdef
+        var initialC uint32 = 0xfedcba98
+        var initialD uint32 = 0x76543210
+	
+	var A uint32 = initialA
+        var B uint32 = initialB
+        var C uint32 = initialC
+        var D uint32 = initialD
 
 	var new_A, new_B, new_C, new_D uint32 = 0, 0, 0, 0
 
@@ -115,20 +121,27 @@ func main(){
 		{0,7,14,5,12,3,10,1,8,15,6,13,4,11,2,9},
 	}
 
+	shifts := [][]int{
+		{7,12,17,22,7,12,17,22,7,12,17,22,7,12,17,22},
+		{5,9,14,20,5,9,14,20,5,9,14,20,5,9,14,20},
+		{4,11,16,13,4,11,16,13,4,11,16,13,4,11,16,13},
+		{6,10,15,21,6,10,15,21,6,10,15,21,6,10,15,21},
+	}
+
 	for i:=0;i<len(data)/64;i++{
 		M:=data[i:i+64] //512-bit blocks
 		words := make([][]byte,16)
 		for j:=0;j<16;j++{
 			words[j] = M[4*j:4*(j+1)] //In each 512-bit Block we have 16 32-bit words (M_0 to M_15)
 		}
-		fmt.Println(words)
 		
 		for round:=0;round<4;round++{
 			for operationNumber:=0;operationNumber<16;operationNumber++{
-				K = KFormula(round,operationNumber)
+				K := KFormula(round,operationNumber)
+				S := shifts[round][operationNumber]
 				word := words[rounds[round][operationNumber]] //This is a [4]byte
 				new_A = D
-				new_B = operation(A,B,C,D,word,K,round)
+				new_B = operation(A,B,C,D,word,K,round,S)
 				new_C = B
 				new_D = C
 
@@ -138,5 +151,17 @@ func main(){
 				D = new_D
 			}
 		}
+		new_A = uint32(A+initialA)
+		new_B = uint32(B+initialB)
+		new_C = uint32(C+initialC)
+		new_D = uint32(D+initialD)
+		A = new_A
+		B = new_B
+		C = new_C
+		D = new_D
 	}
+	fmt.Printf("%x%x%x%x\n", A,B,C,D)
+	trueVal := md5.Sum([]byte(input))
+	fmt.Printf("%x\n", trueVal)
+
 }
