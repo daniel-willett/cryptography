@@ -2,24 +2,24 @@ package main
 
 import ("fmt"; "math")
 
-func F(B byte, C byte, D byte) byte{
+func F(B uint32, C uint32, D uint32) uint32{
 	//(B AND C) OR ((NOT B) AND D)
 	//NOT B is the same as 11111111 XOR B
 	return (B & C) | ((11111111 ^ B) & D)
 }
 
-func G(B byte, C byte, D byte) byte{
+func G(B uint32, C uint32, D uint32) uint32{
 	//(B AND C) OR (C AND NOT D)
         //NOT D is the same as 11111111 XOR D
         return (B & C) | (C & (11111111^D))
 }
 
-func H(B byte, C byte, D byte) byte{
+func H(B uint32, C uint32, D uint32) uint32{
 	///B XOR C XOR D
 	return B ^ C ^ D
 }
 
-func I(B byte, C byte, D byte) byte{
+func I(B uint32, C uint32, D uint32) uint32{
 	//C XOR (B OR (NOT D))
 	//NOT D is the same as 11111111 XOR D
 	return C ^ (B | (11111111^D))
@@ -50,16 +50,41 @@ func padding(data []byte) []byte{
 	return data
 }
 
-func operation(A int32, B int32, C int32, D int32, word []byte, K int32, round int) int32{
-	
+func bytesToInt32(word []byte) uint32{
+	//[01 23 45 67] into a single value (presumably in decimal as the []byte is in decimal)
+	//
+	var first, second, third, fourth uint32 = 0, 0, 0, 0
+	first = uint32(word[0]) * uint32(math.Pow(2,8*3))
+        second = uint32(word[1]) * uint32(math.Pow(2,8*2))
+        third = uint32(word[2]) * uint32(math.Pow(2,8*1))
+        fourth = uint32(word[3]) * uint32(math.Pow(2,8*0))
+	return first + second + third + fourth
 }
 
-func KFormula(round int,operationNumber int)int32{
+func operation(A uint32, B uint32, C uint32, D uint32, word []byte, K uint32, round int) uint32{
+	var functionResult uint32 = 0
+	switch round{
+	case 0:
+		functionResult = F(B,C,D)
+	case 1:
+		functionResult = G(B,C,D)
+	case 2:
+		functionResult = H(B,C,D)
+	case 3:
+		functionResult = I(B,C,D)
+	}
+	functionResult = uint32(A+functionResult) //A+F(B,C,D) mod 2^32
+	converted := bytesToInt32(word)
+	functionResult = uint32(converted+functionResult) //A+F(B,C,D)+M_i mod 2^32
+	functionResult = uint32(K+functionResult) //A+F(B,C,D)+M_i+K_i mod 2^32
+}
+
+func KFormula(round int,operationNumber int)uint32{
 	var i float64 = float64((16*round)+operationNumber)
 	sineValue := math.Sin(angle)
 	value := math.Abs(sineValue) * math.Pow(2,32)
 	quotient := int(math.Trunc(value))
-	return int32(quotient)
+	return uint32(quotient)
 }
 
 
@@ -76,12 +101,12 @@ func main(){
 	data = padding(data)
 	fmt.Println(data)
 
-	var A int32 = 0x01234567
-        var B int32 = 0x89abcdef
-        var C int32 = 0xfedcba98
-        var D int32 = 0x76543210
+	var A uint32 = 0x01234567
+        var B uint32 = 0x89abcdef
+        var C uint32 = 0xfedcba98
+        var D uint32 = 0x76543210
 
-	var new_A, new_B, new_C, new_D int32 = 0, 0, 0, 0
+	var new_A, new_B, new_C, new_D uint32 = 0, 0, 0, 0
 
 	rounds := [][]int{
 		{0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15},
@@ -106,6 +131,11 @@ func main(){
 				new_B = operation(A,B,C,D,word,K,round)
 				new_C = B
 				new_D = C
+
+				A = new_A
+				B = new_B
+				C = new_C
+				D = new_D
 			}
 		}
 	}
