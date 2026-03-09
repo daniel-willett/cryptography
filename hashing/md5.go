@@ -50,6 +50,17 @@ func padding(data []byte) []byte{
 	return data
 }
 
+func operation(A int32, B int32, C int32, D int32, Mi []byte, Ki int32) int32{
+}
+
+func KFormula(round int,operationNumber int)int32{
+	var i float64 = float64((16*round)+operationNumber)
+	sineValue := math.Sin(angle)
+	value := math.Abs(sineValue) * math.Pow(2,32)
+	quotient := int(math.Trunc(value))
+	return int32(quotient)
+}
+
 
 func main(){
 	/*
@@ -88,11 +99,12 @@ func main(){
 		
 		for round:=0;round<4;round++{
 			for operationNumber:=0;operationNumber<16;operationNumber++{
+				K = KFormula(round,operationNumber)
+				new_A = D
+				new_B = operation(A,B,C,D,M_i,K)
+				new_C = B
+				new_D = C
 			}
 		}
-		new_A = D
-		new_B = operation(A,B,C,D,M_i,K_i)
-		new_C = B
-		new_D = C
 	}
 }
