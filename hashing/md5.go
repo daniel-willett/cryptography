@@ -50,7 +50,8 @@ func padding(data []byte) []byte{
 	return data
 }
 
-func operation(A int32, B int32, C int32, D int32, Mi []byte, Ki int32) int32{
+func operation(A int32, B int32, C int32, D int32, word []byte, K int32, round int) int32{
+	
 }
 
 func KFormula(round int,operationNumber int)int32{
@@ -100,8 +101,9 @@ func main(){
 		for round:=0;round<4;round++{
 			for operationNumber:=0;operationNumber<16;operationNumber++{
 				K = KFormula(round,operationNumber)
+				word := words[rounds[round][operationNumber]] //This is a [4]byte
 				new_A = D
-				new_B = operation(A,B,C,D,M_i,K)
+				new_B = operation(A,B,C,D,word,K,round)
 				new_C = B
 				new_D = C
 			}
