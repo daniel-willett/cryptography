@@ -2,6 +2,30 @@ package main
 
 import ("fmt"; "math")
 
+func F(B byte, C byte, D byte) byte{
+	//(B AND C) OR ((NOT B) AND D)
+	//NOT B is the same as 11111111 XOR B
+	return (B & C) | ((11111111 ^ B) & D)
+}
+
+func G(B byte, C byte, D byte) byte{
+	//(B AND C) OR (C AND NOT D)
+        //NOT D is the same as 11111111 XOR D
+        return (B & C) | (C & (11111111^D))
+}
+
+func H(B byte, C byte, D byte) byte{
+	///B XOR C XOR D
+	return B ^ C ^ D
+}
+
+func I(B byte, C byte, D byte) byte{
+	//C XOR (B OR (NOT D))
+	//NOT D is the same as 11111111 XOR D
+	return C ^ (B | (11111111^D))
+}
+
+
 func padding(data []byte) []byte{
 	//Each []byte is 8 bits as []byte takes values 0-255
 	bitLength := len(data) * 8
@@ -40,10 +64,12 @@ func main(){
 	data = padding(data)
 	fmt.Println(data)
 
-	A := 0x01234567
-        B := 0x89abcdef
-        C := 0xfedcba98
-        D := 0x76543210
+	var A int32 = 0x01234567
+        var B int32 = 0x89abcdef
+        var C int32 = 0xfedcba98
+        var D int32 = 0x76543210
+
+	var new_A, new_B, new_C, new_D int32 = 0, 0, 0, 0
 
 	rounds := [][]int{
 		{0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15},
@@ -53,11 +79,20 @@ func main(){
 	}
 
 	for i:=0;i<len(data)/64;i++{
-		M:=data[i:i+64]
+		M:=data[i:i+64] //512-bit blocks
 		words := make([][]byte,16)
 		for j:=0;j<16;j++{
-			words[j] = M[4*j:4*(j+1)]
+			words[j] = M[4*j:4*(j+1)] //In each 512-bit Block we have 16 32-bit words (M_0 to M_15)
 		}
 		fmt.Println(words)
+		
+		for round:=0;round<4;round++{
+			for operationNumber:=0;operationNumber<16;operationNumber++{
+			}
+		}
+		new_A = D
+		new_B = operation(A,B,C,D,M_i,K_i)
+		new_C = B
+		new_D = C
 	}
 }
