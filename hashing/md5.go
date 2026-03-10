@@ -124,7 +124,7 @@ func main(){
 	fmt.Println(data)
 	*/
 
-	input := ""
+	input := "Hello world"
 	data := []byte(input)
 	data = padding(data)
 
