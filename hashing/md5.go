@@ -4,14 +4,12 @@ import ("fmt"; "math"; "math/bits"; "crypto/md5")
 
 func F(B uint32, C uint32, D uint32) uint32{
 	//(B AND C) OR ((NOT B) AND D)
-	//NOT B is the same as 11111111 XOR B
-	return (B & C) | ((11111111 ^ B) & D)
+	return (B & C) | ((^ B) & D)
 }
 
 func G(B uint32, C uint32, D uint32) uint32{
 	//(B AND C) OR (C AND NOT D)
-        //NOT D is the same as 11111111 XOR D
-        return (B & C) | (C & (11111111^D))
+        return (B & C) | (C & (^D))
 }
 
 func H(B uint32, C uint32, D uint32) uint32{
@@ -21,8 +19,7 @@ func H(B uint32, C uint32, D uint32) uint32{
 
 func I(B uint32, C uint32, D uint32) uint32{
 	//C XOR (B OR (NOT D))
-	//NOT D is the same as 11111111 XOR D
-	return C ^ (B | (11111111^D))
+	return C ^ (B | (^D))
 }
 
 
@@ -46,6 +43,7 @@ func padding(data []byte) []byte{
 		lengthPadding[7-i] = byte(temp)
 		lengthPaddingValue = lengthPaddingValue - (temp*int(math.Pow(2,float64(8*i))))
 	}
+	//lengthPadding = littleEndian(lengthPadding)
 	data = append(data, lengthPadding...)
 	return data
 }
@@ -73,12 +71,20 @@ func operation(A uint32, B uint32, C uint32, D uint32, word []byte, K uint32, ro
 	case 3:
 		functionResult = I(B,C,D)
 	}
+	fmt.Println("=========")
+	fmt.Printf("%x\n",A)
+	fmt.Printf("%x\n",functionResult)
+	fmt.Printf("%x\n",K)
+	fmt.Printf("%x\n",word)
 	functionResult = uint32(A+functionResult) // A+F(B,C,D) mod 2^32
 	converted := bytesToInt32(word)
 	functionResult = uint32(converted+functionResult) // A+F(B,C,D)+M_i mod 2^32
 	functionResult = uint32(K+functionResult) // A+F(B,C,D)+M_i+K_i mod 2^32
+	fmt.Printf("%x\n",functionResult)
 	functionResult = bits.RotateLeft32(functionResult, S) // <<<S
+	fmt.Printf("%x\n",functionResult)
 	functionResult = uint32(B+functionResult) // ((A+F(B,C,D)+M_i+K_i mod 2^32)<<<3)+B mod 2^32
+	fmt.Printf("%x\n",functionResult)
 	return functionResult
 }
 
@@ -90,7 +96,19 @@ func KFormula(round int,operationNumber int)uint32{
 	return uint32(quotient)
 }
 
+func littleEndian(words []byte) []byte{
+	n := len(words)
+	newOne := make([]byte, n)
+	for i:=0; i<n; i++{
+		newOne[i] = words[n-1-i]
+	}
+	return newOne
+}
+
 func main(){
+
+	//data2 := []byte{0,0,0,0,0,0,0,8}
+	//fmt.Println(littleEndian(data2))
 	/*
 	input := "Hello World"
 	data := []byte(input)
@@ -98,7 +116,7 @@ func main(){
 	fmt.Println(data)
 	*/
 
-	input := "They are deterministic"
+	input := ""
 	data := []byte(input)
 	data = padding(data)
 
@@ -140,6 +158,7 @@ func main(){
 		words := make([][]byte,16)
 		for j:=0;j<16;j++{
 			words[j] = M[4*j:4*(j+1)] //In each 512-bit Block we have 16 32-bit words (M_0 to M_15)
+			words[j] = littleEndian(words[j])
 		}
 		
 		for round:=0;round<4;round++{
