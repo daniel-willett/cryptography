@@ -4,7 +4,7 @@ import ("fmt"; "math"; "math/bits"; "crypto/md5")
 
 func F(B uint32, C uint32, D uint32) uint32{
 	//(B AND C) OR ((NOT B) AND D)
-	return (B & C) | ((^ B) & D)
+	return (B & C) | ((^B) & D)
 }
 
 func G(B uint32, C uint32, D uint32) uint32{
@@ -104,6 +104,15 @@ func littleEndian(words []byte) []byte{
 	return newOne
 }
 
+func fromLittleEndian(x uint32)uint32{
+        first := x>>24
+        second := ((x<<8)>>24)<<8
+        third := ((x<<16)>>24)<<16
+        fourth := x<<24
+        var total uint32 = first + second + third + fourth
+        return total
+}
+
 func main(){
 
 	//data2 := []byte{0,0,0,0,0,0,0,8}
@@ -148,7 +157,7 @@ func main(){
 	shifts := [][]int{
 		{7,12,17,22,7,12,17,22,7,12,17,22,7,12,17,22},
 		{5,9,14,20,5,9,14,20,5,9,14,20,5,9,14,20},
-		{4,11,16,13,4,11,16,13,4,11,16,13,4,11,16,13},
+		{4,11,16,23,4,11,16,23,4,11,16,23,4,11,16,23},
 		{6,10,15,21,6,10,15,21,6,10,15,21,6,10,15,21},
 	}
 
@@ -189,8 +198,7 @@ func main(){
 		C = new_C
 		D = new_D
 	}
-	fmt.Printf("%08x%08x%08x%08x\n", A,B,C,D)
+	fmt.Printf("%08x%08x%08x%08x\n", fromLittleEndian(A),fromLittleEndian(B),fromLittleEndian(C),fromLittleEndian(D))
 	trueVal := md5.Sum([]byte(input))
 	fmt.Printf("%32x\n", trueVal)
-
 }
