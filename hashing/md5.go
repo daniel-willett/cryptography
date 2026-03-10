@@ -115,15 +115,6 @@ func fromLittleEndian(x uint32)uint32{
 
 func main(){
 
-	//data2 := []byte{0,0,0,0,0,0,0,8}
-	//fmt.Println(littleEndian(data2))
-	/*
-	input := "Hello World"
-	data := []byte(input)
-	data = padding(data)
-	fmt.Println(data)
-	*/
-
 	input := "Hello world"
 	data := []byte(input)
 	data = padding(data)
