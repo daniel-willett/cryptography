@@ -8,8 +8,8 @@ func F(B uint32, C uint32, D uint32) uint32{
 }
 
 func G(B uint32, C uint32, D uint32) uint32{
-	//(B AND C) OR (C AND NOT D)
-        return (B & C) | (C & (^D))
+	//(B AND D) OR (C AND NOT D)
+        return (D & B) | (C & (^D))
 }
 
 func H(B uint32, C uint32, D uint32) uint32{
