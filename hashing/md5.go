@@ -71,20 +71,12 @@ func operation(A uint32, B uint32, C uint32, D uint32, word []byte, K uint32, ro
 	case 3:
 		functionResult = I(B,C,D)
 	}
-	fmt.Println("=========")
-	fmt.Printf("%x\n",A)
-	fmt.Printf("%x\n",functionResult)
-	fmt.Printf("%x\n",K)
-	fmt.Printf("%x\n",word)
 	functionResult = uint32(A+functionResult) // A+F(B,C,D) mod 2^32
 	converted := bytesToInt32(word)
 	functionResult = uint32(converted+functionResult) // A+F(B,C,D)+M_i mod 2^32
 	functionResult = uint32(K+functionResult) // A+F(B,C,D)+M_i+K_i mod 2^32
-	fmt.Printf("%x\n",functionResult)
 	functionResult = bits.RotateLeft32(functionResult, S) // <<<S
-	fmt.Printf("%x\n",functionResult)
 	functionResult = uint32(B+functionResult) // ((A+F(B,C,D)+M_i+K_i mod 2^32)<<<3)+B mod 2^32
-	fmt.Printf("%x\n",functionResult)
 	return functionResult
 }
 
