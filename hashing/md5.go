@@ -43,7 +43,7 @@ func padding(data []byte) []byte{
 		lengthPadding[7-i] = byte(temp)
 		lengthPaddingValue = lengthPaddingValue - (temp*int(math.Pow(2,float64(8*i))))
 	}
-	//lengthPadding = littleEndian(lengthPadding)
+	lengthPadding = littleEndian(lengthPadding)
 	data = append(data, lengthPadding...)
 	return data
 }
@@ -61,6 +61,8 @@ func bytesToInt32(word []byte) uint32{
 
 func operation(A uint32, B uint32, C uint32, D uint32, word []byte, K uint32, round int, S int) uint32{
 	var functionResult uint32 = 0
+	fmt.Printf("A is %08x, B is %08x, C is %08x, D is %08x\n", A,B,C,D)
+	fmt.Printf("%08x\n", word)
 	switch round{
 	case 0:
 		functionResult = F(B,C,D)
@@ -71,12 +73,17 @@ func operation(A uint32, B uint32, C uint32, D uint32, word []byte, K uint32, ro
 	case 3:
 		functionResult = I(B,C,D)
 	}
+	fmt.Printf("function is %08x\n", functionResult)
+	fmt.Printf("K is %08x\n", K)
 	functionResult = uint32(A+functionResult) // A+F(B,C,D) mod 2^32
 	converted := bytesToInt32(word)
 	functionResult = uint32(converted+functionResult) // A+F(B,C,D)+M_i mod 2^32
 	functionResult = uint32(K+functionResult) // A+F(B,C,D)+M_i+K_i mod 2^32
+	fmt.Printf("Sum is %08x\n", functionResult)
 	functionResult = bits.RotateLeft32(functionResult, S) // <<<S
+	fmt.Printf("Shift by %v gives\n%08x\n", S, functionResult)
 	functionResult = uint32(B+functionResult) // ((A+F(B,C,D)+M_i+K_i mod 2^32)<<<3)+B mod 2^32
+	fmt.Printf("B will become %08x\n", functionResult)
 	return functionResult
 }
 
@@ -90,9 +97,9 @@ func KFormula(round int,operationNumber int)uint32{
 
 func littleEndian(words []byte) []byte{
 	n := len(words)
-	newOne := make([]byte, n)
+	newOne := []byte{}
 	for i:=0; i<n; i++{
-		newOne[i] = words[n-1-i]
+		newOne = append(newOne, words[n-1-i])
 	}
 	return newOne
 }
@@ -152,12 +159,15 @@ func main(){
 			words[j] = M[4*j:4*(j+1)] //In each 512-bit Block we have 16 32-bit words (M_0 to M_15)
 			words[j] = littleEndian(words[j])
 		}
-		
+		fmt.Printf("%08x\n", words)
 		for round:=0;round<4;round++{
 			for operationNumber:=0;operationNumber<16;operationNumber++{
 				K := KFormula(round,operationNumber)
 				S := shifts[round][operationNumber]
 				word := words[rounds[round][operationNumber]] //This is a [4]byte
+				fmt.Println("================")
+				fmt.Printf("round %v\n", round)
+				fmt.Printf("itteration %v\n", operationNumber)
 				new_A = D
 				new_B = operation(A,B,C,D,word,K,round,S)
 				new_C = B
@@ -167,6 +177,7 @@ func main(){
 				B = new_B
 				C = new_C
 				D = new_D
+				fmt.Printf("We now have\n A = %08x\n B = %08x\n C = %08x\n D = %08x\n",A,B,C,D)
 			}
 		}
 		new_A = uint32(A+initialA)
@@ -178,8 +189,8 @@ func main(){
 		C = new_C
 		D = new_D
 	}
-	fmt.Printf("%x%x%x%x\n", A,B,C,D)
+	fmt.Printf("%08x%08x%08x%08x\n", A,B,C,D)
 	trueVal := md5.Sum([]byte(input))
-	fmt.Printf("%x\n", trueVal)
+	fmt.Printf("%32x\n", trueVal)
 
 }
