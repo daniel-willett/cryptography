@@ -49,20 +49,16 @@ func padding(data []byte) []byte{
 }
 
 func bytesToInt32(word []byte) uint32{
-	//[01 23 45 67] into a single value (presumably in decimal as the []byte is in decimal)
-	//
-	var first, second, third, fourth uint32 = 0, 0, 0, 0
-	first = uint32(word[0]) * uint32(math.Pow(2,8*3))
-        second = uint32(word[1]) * uint32(math.Pow(2,8*2))
-        third = uint32(word[2]) * uint32(math.Pow(2,8*1))
-        fourth = uint32(word[3]) * uint32(math.Pow(2,8*0))
-	return first + second + third + fourth
+	var total uint32 = 0
+	for i:=0; i<4; i++{
+		total += uint32(word[i]) * uint32(math.Pow(2,float64(8*(3-i))))
+	}
+	return total
 }
 
 func operation(A uint32, B uint32, C uint32, D uint32, word []byte, K uint32, round int, S int) uint32{
 	var functionResult uint32 = 0
-	//fmt.Printf("A is %08x, B is %08x, C is %08x, D is %08x\n", A,B,C,D)
-	//fmt.Printf("%08x\n", word)
+	converted := bytesToInt32(word)
 	switch round{
 	case 0:
 		functionResult = F(B,C,D)
@@ -73,17 +69,11 @@ func operation(A uint32, B uint32, C uint32, D uint32, word []byte, K uint32, ro
 	case 3:
 		functionResult = I(B,C,D)
 	}
-	//fmt.Printf("function is %08x\n", functionResult)
-	//fmt.Printf("K is %08x\n", K)
-	functionResult = uint32(A+functionResult) // A+F(B,C,D) mod 2^32
-	converted := bytesToInt32(word)
-	functionResult = uint32(converted+functionResult) // A+F(B,C,D)+M_i mod 2^32
-	functionResult = uint32(K+functionResult) // A+F(B,C,D)+M_i+K_i mod 2^32
-	//fmt.Printf("Sum is %08x\n", functionResult)
-	functionResult = bits.RotateLeft32(functionResult, S) // <<<S
-	//fmt.Printf("Shift by %v gives\n%08x\n", S, functionResult)
-	functionResult = uint32(B+functionResult) // ((A+F(B,C,D)+M_i+K_i mod 2^32)<<<3)+B mod 2^32
-	//fmt.Printf("B will become %08x\n", functionResult)
+	functionResult = uint32(A+functionResult) 		// A+F(B,C,D) mod 2^32
+	functionResult = uint32(converted+functionResult) 	// A+F(B,C,D)+M_i mod 2^32
+	functionResult = uint32(K+functionResult) 		// A+F(B,C,D)+M_i+K_i mod 2^32
+	functionResult = bits.RotateLeft32(functionResult, S) 	// <<<S
+	functionResult = uint32(B+functionResult) 		// ((A+F(B,C,D)+M_i+K_i mod 2^32)<<<S)+B mod 2^32
 	return functionResult
 }
 
@@ -105,29 +95,31 @@ func littleEndian(words []byte) []byte{
 }
 
 func fromLittleEndian(x uint32)uint32{
-        first := x>>24
-        second := ((x<<8)>>24)<<8
-        third := ((x<<16)>>24)<<16
-        fourth := x<<24
-        var total uint32 = first + second + third + fourth
-        return total
+	//[A, B, C, D]
+	//To clear the values left and right of each value we push it to the leftmost, <<8*i, and then right most, >>24, positions
+	//Then move it to the position we want it to go, <<8*i
+	var total uint32 = 0
+	for i:=0; i<4; i++{
+		total += ((x<<(8*i)>>24)<<(8*i))
+	}
+	return total
 }
 
 func main(){
 	
 	start := time.Now()
 
-	input := "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+	input := "Hello Silas, I hope you are having a good day. I wanted to thank you for all the help and guidance you have provided me. I think I have now typed enough words for this message to be over 512bits long :)"
 	data := []byte(input)
 	data = padding(data)
 
 	/*
-	var initialA uint32 = 0x01234567
-        var initialB uint32 = 0x89abcdef
-        var initialC uint32 = 0xfedcba98
-        var initialD uint32 = 0x76543210
+	The starting values are the following turned into little endian which I have done manually
+	0x01234567
+        0x89abcdef
+        0xfedcba98
+        0x76543210
 	*/
-
 	var initialA uint32 = 0x67452301
         var initialB uint32 = 0xefcdab89
         var initialC uint32 = 0x98badcfe
@@ -157,28 +149,22 @@ func main(){
 	for i:=0;i<len(data)/64;i++{
 		M:=data[64*i:64*(i+1)] //512-bit blocks
 		words := make([][]byte,16)
+		//In each 512-bit Block, M, we have 16 32-bit words (M_0 to M_15)
 		for j:=0;j<16;j++{
-			words[j] = M[4*j:4*(j+1)] //In each 512-bit Block we have 16 32-bit words (M_0 to M_15)
-			words[j] = littleEndian(words[j])
+			words[j] = littleEndian(M[4*j:4*(j+1)])
 		}
 
-		//The initial vectors are the values from the previous block (in the case this is the first block then we use the original values declared before
+		//The initial vectors are the values from the previous block (in the case this is the first block then we use the original values declared before)
 		var blockInitialA uint32 = A
         	var blockInitialB uint32 = B
         	var blockInitialC uint32 = C
         	var blockInitialD uint32 = D
-		
-		
-		
-		//fmt.Printf("%08x\n", words)
+
 		for round:=0;round<4;round++{
 			for operationNumber:=0;operationNumber<16;operationNumber++{
 				K := KFormula(round,operationNumber)
 				S := shifts[round][operationNumber]
 				word := words[rounds[round][operationNumber]] //This is a [4]byte
-				//fmt.Println("================")
-				//fmt.Printf("round %v\n", round)
-				//fmt.Printf("itteration %v\n", operationNumber)
 				new_A = D
 				new_B = operation(A,B,C,D,word,K,round,S)
 				new_C = B
@@ -188,7 +174,6 @@ func main(){
 				B = new_B
 				C = new_C
 				D = new_D
-				//fmt.Printf("We now have\n A = %08x\n B = %08x\n C = %08x\n D = %08x\n",A,B,C,D)
 			}
 		}
 		//Feed forward step
@@ -202,6 +187,7 @@ func main(){
 		D = new_D
 	}
 	end := time.Since(start)
+	fmt.Printf("Input was: \"%v\"\n",input)
 	fmt.Printf("Time taken: %s\n", end)
 	fmt.Printf("Result:\n%08x%08x%08x%08x\n", fromLittleEndian(A),fromLittleEndian(B),fromLittleEndian(C),fromLittleEndian(D))
 	trueVal := md5.Sum([]byte(input))
