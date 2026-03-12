@@ -155,7 +155,7 @@ func main(){
 	}
 
 	for i:=0;i<len(data)/64;i++{
-		M:=data[i:i+64] //512-bit blocks
+		M:=data[64*i:64*(i+1)] //512-bit blocks
 		words := make([][]byte,16)
 		for j:=0;j<16;j++{
 			words[j] = M[4*j:4*(j+1)] //In each 512-bit Block we have 16 32-bit words (M_0 to M_15)
