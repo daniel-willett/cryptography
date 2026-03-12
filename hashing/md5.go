@@ -1,6 +1,6 @@
 package main
 
-import ("fmt"; "math"; "math/bits"; "crypto/md5"; "time")
+import ("fmt"; "math"; "math/bits"; "time"; "os")
 
 func F(B uint32, C uint32, D uint32) uint32{
 	//(B AND C) OR ((NOT B) AND D)
@@ -109,8 +109,18 @@ func main(){
 	
 	start := time.Now()
 
-	input := "Hello. I hope you are having a good day. My day is pretty good because I got MD5 working in Go."
-	data := []byte(input)
+	args := os.Args
+	var data []byte
+	var input string = "Hello World"
+	var err error
+	if len(args) != 1{
+		data, err = os.ReadFile(args[1])
+        	if err != nil{
+                	panic(err)
+        	}
+	} else {
+		data = []byte(input)
+	}
 	data = padding(data)
 
 	/*
@@ -187,9 +197,6 @@ func main(){
 		D = new_D
 	}
 	end := time.Since(start)
-	fmt.Printf("Input was: \"%v\"\n",input)
 	fmt.Printf("Time taken: %s\n", end)
 	fmt.Printf("Result:\n%08x%08x%08x%08x\n", fromLittleEndian(A),fromLittleEndian(B),fromLittleEndian(C),fromLittleEndian(D))
-	trueVal := md5.Sum([]byte(input))
-	fmt.Printf("True hash:\n%32x\n", trueVal)
 }
