@@ -121,6 +121,8 @@ func main(){
 	} else {
 		data = []byte(input)
 	}
+
+
 	data = padding(data)
 
 	/*
@@ -196,7 +198,7 @@ func main(){
 		C = new_C
 		D = new_D
 	}
+	fmt.Printf("Result:\n%08x%08x%08x%08x\n", fromLittleEndian(A),fromLittleEndian(B),fromLittleEndian(C),fromLittleEndian(D))
 	end := time.Since(start)
 	fmt.Printf("Time taken: %s\n", end)
-	fmt.Printf("Result:\n%08x%08x%08x%08x\n", fromLittleEndian(A),fromLittleEndian(B),fromLittleEndian(C),fromLittleEndian(D))
 }
