@@ -35,7 +35,7 @@ func padding(data []byte) []byte{
 		data = append(data, 0)
 	}
 	lengthPaddingValue := bitLength%int(math.Pow(2,64))
-	lengthPadding := make([]byte, 64/8) //64bit but each "chunk" is 8bits so we need 64/8=8 "chunks"
+	lengthPadding := make([]byte, 64/8) //64bit but each byte is 8bits so we need 64/8=8 many bytes
 	//[0     0     0     0     0     0     0     0]
 	//2^8^7 2^8^6 2^8^5 2^8^4 2^8^3 2^8^2 2^8^1 2^8^0
 	for i:=7; i>=0; i--{
@@ -109,7 +109,7 @@ func main(){
 	
 	start := time.Now()
 
-	input := "Hello Silas, I hope you are having a good day. I wanted to thank you for all the help and guidance you have provided me. I think I have now typed enough words for this message to be over 512bits long :)"
+	input := "Hello. I hope you are having a good day. My day is pretty good because I got MD5 working in Go."
 	data := []byte(input)
 	data = padding(data)
 
@@ -121,14 +121,14 @@ func main(){
         0x76543210
 	*/
 	var initialA uint32 = 0x67452301
-        var initialB uint32 = 0xefcdab89
-        var initialC uint32 = 0x98badcfe
-        var initialD uint32 = 0x10325476
+	var initialB uint32 = 0xefcdab89
+	var initialC uint32 = 0x98badcfe
+	var initialD uint32 = 0x10325476
 	
 	var A uint32 = initialA
-        var B uint32 = initialB
-        var C uint32 = initialC
-        var D uint32 = initialD
+	var B uint32 = initialB
+	var C uint32 = initialC
+	var D uint32 = initialD
 
 	var new_A, new_B, new_C, new_D uint32 = 0, 0, 0, 0
 
@@ -156,9 +156,9 @@ func main(){
 
 		//The initial vectors are the values from the previous block (in the case this is the first block then we use the original values declared before)
 		var blockInitialA uint32 = A
-        	var blockInitialB uint32 = B
-        	var blockInitialC uint32 = C
-        	var blockInitialD uint32 = D
+		var blockInitialB uint32 = B
+		var blockInitialC uint32 = C
+		var blockInitialD uint32 = D
 
 		for round:=0;round<4;round++{
 			for operationNumber:=0;operationNumber<16;operationNumber++{
