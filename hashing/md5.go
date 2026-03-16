@@ -77,7 +77,7 @@ func main(){
 	}
 
 
-	data = util.Padding(data)
+	data = util.Padding(data, true)
 
 	/*
 	The starting values are the following turned into little endian which I have done manually
