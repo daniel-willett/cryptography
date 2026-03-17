@@ -55,61 +55,51 @@ func main(){
         0x76543210
 	0xF0E1D2C3
         */
-        var initialA uint32 = 0x67452301
-        var initialB uint32 = 0xefcdab89
-        var initialC uint32 = 0x98badcfe
-        var initialD uint32 = 0x10325476
-	var initialE uint32 = 0xC3D2E1F0
+        var h0 uint32 = 0x67452301
+        var h1 uint32 = 0xefcdab89
+        var h2 uint32 = 0x98badcfe
+        var h3 uint32 = 0x10325476
+	var h4 uint32 = 0xC3D2E1F0
 
-	var A uint32 = initialA
-	var B uint32 = initialB
-	var C uint32 = initialC
-	var D uint32 = initialD
-	var E uint32 = initialE
-
-        var new_A, new_B, new_C, new_D, new_E uint32 = 0, 0, 0, 0, 0
+	var A uint32 = h0
+	var B uint32 = h1
+	var C uint32 = h2
+	var D uint32 = h3
+	var E uint32 = h4
 
 	for i:=0;i<len(data)/64;i++{
 		M:=data[64*i:64*(i+1)] //512-bit block
 		words := make([]uint32,80)
 		for j:=0;j<16;j++{
-			words[j] = util.BytesToInt32(M[4*j:4*(j+1)])
+			words[j] = util.BytesToInt32(M[4*j:4*(j+1)],false) //Big Endian notation so use false
+			fmt.Println(words[j])
 		}
+		fmt.Println("=========")
 		for j:=16;j<80;j++{
 			words[j] = bits.RotateLeft32((words[j-3] ^ words[j-8] ^ words[j-14] ^ words[j-16]), 1)
+			fmt.Println(words[j])
 		}
 
-		var blockInitialA uint32 = A
-                var blockInitialB uint32 = B
-                var blockInitialC uint32 = C
-                var blockInitialD uint32 = D
-		var blockInitialE uint32 = E
+		A = h0
+		B = h1
+		C = h2
+		D = h3
+		E = h4
 
 		for round:=0;round<80;round++{
 			word := words[round]
-			new_A = operation(A, B, C, D, E, word, round)
-			new_B = A
-			new_C = bits.RotateLeft32(B,30)
-			new_D = C
-			new_E = D
-
-			A = new_A
-                        B = new_B
-                        C = new_C
-                        D = new_D
-			E = new_E
+			temp := operation(A, B, C, D, E, word, round)
+			E = D
+			D = C
+			C = bits.RotateLeft32(B, 30)
+			B = A
+			A = temp
 		}
-		//Feed forward step
-                new_A = uint32(A+blockInitialA)
-                new_B = uint32(B+blockInitialB)
-                new_C = uint32(C+blockInitialC)
-                new_D = uint32(D+blockInitialD)
-		new_E = uint32(E+blockInitialE)
-                A = new_A
-                B = new_B
-                C = new_C
-                D = new_D
-		E = new_E
+		h0 = uint32(A+h0)
+		h1 = uint32(B+h1)
+		h2 = uint32(C+h2)
+		h3 = uint32(D+h3)
+		h4 = uint32(E+h4)
 	}
-	fmt.Printf("Result:\n%08x%08x%08x%08x%08x\n", A, B, C, D, E)
+	fmt.Printf("Result:\n%08x%08x%08x%08x%08x\n", h0, h1, h2, h3, h4)
 }
