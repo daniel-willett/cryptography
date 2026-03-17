@@ -2,46 +2,18 @@ package main
 
 import ("fmt"; "math"; "math/bits"; "time"; "os"; "hashing/util")
 
-func F(B uint32, C uint32, D uint32) uint32{
-	//(B AND C) OR ((NOT B) AND D)
-	return (B & C) | ((^B) & D)
-}
-
-func G(B uint32, C uint32, D uint32) uint32{
-	//(B AND D) OR (C AND NOT D)
-        return (D & B) | (C & (^D))
-}
-
-func H(B uint32, C uint32, D uint32) uint32{
-	///B XOR C XOR D
-	return B ^ C ^ D
-}
-
-func I(B uint32, C uint32, D uint32) uint32{
-	//C XOR (B OR (NOT D))
-	return C ^ (B | (^D))
-}
-
-func bytesToInt32(word []byte) uint32{
-	var total uint32 = 0
-	for i:=0; i<4; i++{
-		total += uint32(word[i]) * uint32(math.Pow(2,float64(8*(3-i))))
-	}
-	return total
-}
-
 func operation(A uint32, B uint32, C uint32, D uint32, word []byte, K uint32, round int, S int) uint32{
 	var functionResult uint32 = 0
-	converted := bytesToInt32(word)
+	converted := util.BytesToInt32(word)
 	switch round{
 	case 0:
-		functionResult = F(B,C,D)
+		functionResult = util.F(B,C,D)
 	case 1:
-		functionResult = G(B,C,D)
+		functionResult = util.G(B,C,D)
 	case 2:
-		functionResult = H(B,C,D)
+		functionResult = util.H(B,C,D)
 	case 3:
-		functionResult = I(B,C,D)
+		functionResult = util.I(B,C,D)
 	}
 	functionResult = uint32(A+functionResult) 		// A+F(B,C,D) mod 2^32
 	functionResult = uint32(converted+functionResult) 	// A+F(B,C,D)+M_i mod 2^32
