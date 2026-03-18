@@ -1,73 +1,19 @@
 package main
 
-import ("fmt"; "math"; "math/bits"; "time"; "os")
-
-func F(B uint32, C uint32, D uint32) uint32{
-	//(B AND C) OR ((NOT B) AND D)
-	return (B & C) | ((^B) & D)
-}
-
-func G(B uint32, C uint32, D uint32) uint32{
-	//(B AND D) OR (C AND NOT D)
-        return (D & B) | (C & (^D))
-}
-
-func H(B uint32, C uint32, D uint32) uint32{
-	///B XOR C XOR D
-	return B ^ C ^ D
-}
-
-func I(B uint32, C uint32, D uint32) uint32{
-	//C XOR (B OR (NOT D))
-	return C ^ (B | (^D))
-}
-
-
-func padding(data []byte) []byte{
-	//Each []byte is 8 bits as []byte takes values 0-255
-	bitLength := len(data) * 8
-	var quotient int = (bitLength + 64) / 512 //We 'reserve' 64 at the end anyway and we need the total of the 0 padding & length padding to bring to a multiple of 512
-	paddingNeeded := ((quotient+1)*512) - bitLength
-	numberOfZeros := paddingNeeded - 64
-	//First "chunk" (8bits) is taken by binary 10000000 which is 128 in decimal
-	data = append(data, 128)
-	for i:=1; i<=(numberOfZeros/8)-1; i++{ //We need all the "chunks" except the first one which has just been done
-		data = append(data, 0)
-	}
-	lengthPaddingValue := bitLength%int(math.Pow(2,64))
-	lengthPadding := make([]byte, 64/8) //64bit but each byte is 8bits so we need 64/8=8 many bytes
-	//[0     0     0     0     0     0     0     0]
-	//2^8^7 2^8^6 2^8^5 2^8^4 2^8^3 2^8^2 2^8^1 2^8^0
-	for i:=7; i>=0; i--{
-		var temp int = lengthPaddingValue / int(math.Pow(2,float64(8*i)))
-		lengthPadding[7-i] = byte(temp)
-		lengthPaddingValue = lengthPaddingValue - (temp*int(math.Pow(2,float64(8*i))))
-	}
-	lengthPadding = littleEndian(lengthPadding)
-	data = append(data, lengthPadding...)
-	return data
-}
-
-func bytesToInt32(word []byte) uint32{
-	var total uint32 = 0
-	for i:=0; i<4; i++{
-		total += uint32(word[i]) * uint32(math.Pow(2,float64(8*(3-i))))
-	}
-	return total
-}
+import ("fmt"; "math"; "math/bits"; "time"; "os"; "hashing/util")
 
 func operation(A uint32, B uint32, C uint32, D uint32, word []byte, K uint32, round int, S int) uint32{
 	var functionResult uint32 = 0
-	converted := bytesToInt32(word)
+	converted := util.BytesToInt32(word) //Little Endian notation so use true
 	switch round{
 	case 0:
-		functionResult = F(B,C,D)
+		functionResult = util.F(B,C,D)
 	case 1:
-		functionResult = G(B,C,D)
+		functionResult = util.G(B,C,D)
 	case 2:
-		functionResult = H(B,C,D)
+		functionResult = util.H(B,C,D)
 	case 3:
-		functionResult = I(B,C,D)
+		functionResult = util.I(B,C,D)
 	}
 	functionResult = uint32(A+functionResult) 		// A+F(B,C,D) mod 2^32
 	functionResult = uint32(converted+functionResult) 	// A+F(B,C,D)+M_i mod 2^32
@@ -83,26 +29,6 @@ func KFormula(round int,operationNumber int)uint32{
 	value := math.Abs(sineValue) * math.Pow(2,32)
 	quotient := int(math.Trunc(value))
 	return uint32(quotient)
-}
-
-func littleEndian(words []byte) []byte{
-	n := len(words)
-	newOne := []byte{}
-	for i:=0; i<n; i++{
-		newOne = append(newOne, words[n-1-i])
-	}
-	return newOne
-}
-
-func fromLittleEndian(x uint32)uint32{
-	//[A, B, C, D]
-	//To clear the values left and right of each value we push it to the leftmost, <<8*i, and then right most, >>24, positions
-	//Then move it to the position we want it to go, <<8*i
-	var total uint32 = 0
-	for i:=0; i<4; i++{
-		total += ((x<<(8*i)>>24)<<(8*i))
-	}
-	return total
 }
 
 func main(){
@@ -123,7 +49,7 @@ func main(){
 	}
 
 
-	data = padding(data)
+	data = util.Padding(data, true)
 
 	/*
 	The starting values are the following turned into little endian which I have done manually
@@ -163,7 +89,7 @@ func main(){
 		words := make([][]byte,16)
 		//In each 512-bit Block, M, we have 16 32-bit words (M_0 to M_15)
 		for j:=0;j<16;j++{
-			words[j] = littleEndian(M[4*j:4*(j+1)])
+			words[j] = util.LittleEndianByteSlice(M[4*j:4*(j+1)])
 		}
 
 		//The initial vectors are the values from the previous block (in the case this is the first block then we use the original values declared before)
@@ -198,7 +124,7 @@ func main(){
 		C = new_C
 		D = new_D
 	}
-	fmt.Printf("Result:\n%08x%08x%08x%08x\n", fromLittleEndian(A),fromLittleEndian(B),fromLittleEndian(C),fromLittleEndian(D))
+	fmt.Printf("Result:\n%08x%08x%08x%08x\n", util.LittleEndianUInt32(A),util.LittleEndianUInt32(B),util.LittleEndianUInt32(C),util.LittleEndianUInt32(D))
 	end := time.Since(start)
 	fmt.Printf("Time taken: %s\n", end)
 }
