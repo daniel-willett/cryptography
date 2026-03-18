@@ -4,7 +4,7 @@ import ("fmt"; "math"; "math/bits"; "time"; "os"; "hashing/util")
 
 func operation(A uint32, B uint32, C uint32, D uint32, word []byte, K uint32, round int, S int) uint32{
 	var functionResult uint32 = 0
-	converted := util.BytesToInt32(word, true) //Little Endian notation so use true
+	converted := util.BytesToInt32(word) //Little Endian notation so use true
 	switch round{
 	case 0:
 		functionResult = util.F(B,C,D)

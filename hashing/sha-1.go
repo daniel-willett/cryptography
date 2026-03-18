@@ -20,6 +20,13 @@ func operation(A uint32, B uint32, C uint32, D uint32, E uint32, word uint32, ro
 		f = util.I(B,C,D)
 		k = 0xCA62C1D6
 	}
+	/*
+	fmt.Printf("ROTL5(A) is %08x\n", bits.RotateLeft32(A,5))
+	fmt.Printf("f is %08x\n", f)
+	fmt.Printf("E is %08x\n", E)
+	fmt.Printf("W[0] is %08x\n", word)
+	fmt.Printf("K is %08x\n", k)
+	*/
 	functionResult = uint32(word+functionResult)
 	functionResult = uint32(k+functionResult)
 	functionResult = uint32(E+functionResult)
@@ -61,23 +68,17 @@ func main(){
         var h3 uint32 = 0x10325476
 	var h4 uint32 = 0xC3D2E1F0
 
-	var A uint32 = h0
-	var B uint32 = h1
-	var C uint32 = h2
-	var D uint32 = h3
-	var E uint32 = h4
+	var A, B, C, D, E uint32 = 0
 
 	for i:=0;i<len(data)/64;i++{
 		M:=data[64*i:64*(i+1)] //512-bit block
 		words := make([]uint32,80)
 		for j:=0;j<16;j++{
-			words[j] = util.BytesToInt32(M[4*j:4*(j+1)],false) //Big Endian notation so use false
-			fmt.Println(words[j])
+			words[j] = util.BytesToInt32(M[4*j:4*(j+1)]) 
 		}
-		fmt.Println("=========")
+		fmt.Printf("%08x\n",words)
 		for j:=16;j<80;j++{
 			words[j] = bits.RotateLeft32((words[j-3] ^ words[j-8] ^ words[j-14] ^ words[j-16]), 1)
-			fmt.Println(words[j])
 		}
 
 		A = h0
@@ -94,6 +95,13 @@ func main(){
 			C = bits.RotateLeft32(B, 30)
 			B = A
 			A = temp
+			/*
+			fmt.Printf("E is %08x\n", E)
+			fmt.Printf("D is %08x\n", D)
+			fmt.Printf("C is %08x\n", C)
+			fmt.Printf("B is %08x\n", B)
+			fmt.Printf("A is %08x\n", A)
+			*/
 		}
 		h0 = uint32(A+h0)
 		h1 = uint32(B+h1)
