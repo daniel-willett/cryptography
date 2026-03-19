@@ -67,7 +67,7 @@ func main(){
 		M:=data[64*i:64*(i+1)] //512-bit block
 		words := make([]uint32,80)
 		for j:=0;j<16;j++{
-			words[j] = util.BytesToInt32(M[4*j:4*(j+1)]) 
+			words[j] = util.BytesToUInt32(M[4*j:4*(j+1)]) 
 		}
 		for j:=16;j<80;j++{
 			words[j] = bits.RotateLeft32((words[j-3] ^ words[j-8] ^ words[j-14] ^ words[j-16]), 1)
