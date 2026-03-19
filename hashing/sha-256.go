@@ -51,8 +51,8 @@ func main(){
 		for j:=16;j<64;j++{
 			//Rotate left by n for m bit value = rotate right by m-n for m bit value
 			//Alternatively can do rotate left by -n for m bit value
-			s0 := bits.RotateLeft32(words[j-15], -7) ^ bits.RotateLeft32(words[j-15], -18) ^ bits.RotateLeft32(words[j-15], -3)
-			s1 := bits.RotateLeft32(words[j-2], -17) ^ bits.RotateLeft32(words[j-2], -19) ^ bits.RotateLeft32(words[j-2], -10)
+			s0 := bits.RotateLeft32(words[j-15], -7) ^ bits.RotateLeft32(words[j-15], -18) ^ (words[j-15]>>3)
+			s1 := bits.RotateLeft32(words[j-2], -17) ^ bits.RotateLeft32(words[j-2], -19) ^ (words[j-2]>>10)
                         words[j] = uint32(words[j-16] + s0 + words[j-7] + s1)
                 }
 
