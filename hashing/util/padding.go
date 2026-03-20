@@ -5,12 +5,10 @@ import "math"
 func Padding(data []byte, littleEndian bool) []byte{
 	//Each []byte is 8 bits as []byte takes values 0-255
         bitLength := len(data) * 8
-        var quotient int = (bitLength + 64) / 512 //We 'reserve' 64 at the end anyway and we need the total of the 0 padding & length padding to bring to a multiple of 512
-        paddingNeeded := ((quotient+1)*512) - bitLength
-        numberOfZeros := paddingNeeded - 64
+
         //First "chunk" (8bits) is taken by binary 10000000 which is 128 in decimal
         data = append(data, 128)
-        for i:=1; i<=(numberOfZeros/8)-1; i++{ //We need all the "chunks" except the first one which has just been done
+        for len(data)%64 != 64-8{ //We need all the "chunks" except the first one which has just been done
                 data = append(data, 0)
         }
         lengthPaddingValue := bitLength%int(math.Pow(2,64))
