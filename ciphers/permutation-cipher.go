@@ -2,6 +2,20 @@ package main
 
 import ("fmt"; "os"; "github.com/daniel-willett/common-go-methods")
 
+func strip(arr []byte) []byte{
+	var result []byte
+	for _, val := range arr{
+		if (val>=65 && val<=90){
+			result = append(result, val)
+		}
+	}
+	return result
+}
+
+func encrypted(textBlock []byte, keyDataString string) []byte {
+
+}
+
 func main(){
 	args := os.Args
         var data []byte
@@ -16,20 +30,29 @@ func main(){
                 data = []byte(input)
         }
 	
+	data = []byte(common.Upper(string(data)))
+
 	keyData, err := os.ReadFile("permutation-cipher-key")
 	if err != nil{
         	panic(err)
         }
 	keyDataString := string(keyData)
 	
-	blockLength := common.Split(keyDataString,"\n")[0]
-	keyPermutations := common.Split(keyDataString,"\n")[1]
+	//originalText := string(data)
+	justText := strip(data)
 
-	/* To do:
-	We need to verify that the `blockLength` matches as a factor of the number of characters in the plaintext
-	I think a sufficiently true permutation cipher should permute the special characters as well as text but I don't think most people to be in the spirit of what the permutation cipher is supposed to be from an intelectual standpoint.
-	So to only permute text I think we'd need another variable with the text minus all the special characters.
-	--> then apply the cipher to it
-	--> then go back through the old text using two pointers/indexes to replace old cases of text with the new ones.
-	*/
+	numberOfChars := len(justText)
+	blockLength := len(common.Split(keyDataString," "))
+
+	if numberOfChars%blockLength==0{
+		fmt.Println("Error")
+		os.Exit(1)
+	}
+
+	numberOfBlocks := numberOfChars/blockLength
+	var result []byte
+	for i:=0;i<numberOfBlocks;i++{
+		textBlock := justText[blockLength*i:blockLength*(i+1)]
+		result = append(result, encrypted(textBlock, keyDataString)...)
+	}
 }
