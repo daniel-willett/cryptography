@@ -12,8 +12,13 @@ func strip(arr []byte) []byte{
 	return result
 }
 
-func encrypted(textBlock []byte, keyDataString string) []byte {
-
+func encrypted(textBlock []byte, keyDataString string, blockLength int) []byte {
+	var result []byte
+	for i:=0; i<blockLength; i++{
+		//keyDataString[i] is a `byte` so we subtract 48 to get the numerical value. We -1 because the key written by a human is indexed 1 to n rather than 0 to n-1
+		result = append(result, textBlock[keyDataString[2*i]-1-48])
+	}
+	return result
 }
 
 func main(){
@@ -41,11 +46,13 @@ func main(){
 	//originalText := string(data)
 	justText := strip(data)
 
+	fmt.Println(string(justText))
+
 	numberOfChars := len(justText)
 	blockLength := len(common.Split(keyDataString," "))
 
-	if numberOfChars%blockLength==0{
-		fmt.Println("Error")
+	if numberOfChars%blockLength!=0{
+		fmt.Println("Error: Text length doesn't match with factor of key block")
 		os.Exit(1)
 	}
 
@@ -53,6 +60,8 @@ func main(){
 	var result []byte
 	for i:=0;i<numberOfBlocks;i++{
 		textBlock := justText[blockLength*i:blockLength*(i+1)]
-		result = append(result, encrypted(textBlock, keyDataString)...)
+		result = append(result, encrypted(textBlock, keyDataString, blockLength)...)
 	}
+
+	fmt.Println(string(result))
 }
