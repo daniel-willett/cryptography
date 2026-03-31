@@ -43,7 +43,7 @@ func main(){
         }
 	keyDataString := string(keyData)
 	
-	//originalText := string(data)
+	originalText := string(data)
 	justText := strip(data)
 
 	fmt.Println(string(justText))
@@ -64,4 +64,18 @@ func main(){
 	}
 
 	fmt.Println(string(result))
+
+	var ciphertext string
+	var compressedPointer int = 0
+	for i:=0; i<len(originalText); i++{
+		val:=originalText[i]
+		if (val>=65 && val<=90){
+			ciphertext += string(result[compressedPointer])
+			compressedPointer += 1
+		} else {
+			ciphertext += string(val)
+		}
+	}
+
+	fmt.Println(ciphertext)
 }
