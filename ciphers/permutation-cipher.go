@@ -45,9 +45,6 @@ func main(){
 	
 	originalText := string(data)
 	justText := strip(data)
-
-	fmt.Println(string(justText))
-
 	numberOfChars := len(justText)
 	blockLength := len(common.Split(keyDataString," "))
 
@@ -62,8 +59,6 @@ func main(){
 		textBlock := justText[blockLength*i:blockLength*(i+1)]
 		result = append(result, encrypted(textBlock, keyDataString, blockLength)...)
 	}
-
-	fmt.Println(string(result))
 
 	var ciphertext string
 	var compressedPointer int = 0
